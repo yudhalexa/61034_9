@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alexwawo.w08firebase101.ui.theme.W08Firebase101Theme
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.Alignment
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
@@ -45,7 +47,9 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
     var studentId by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var program by remember { mutableStateOf("") }
-    var editingStudent by remember { mutableStateOf<Student?>(null) }
+
+    var currentPhone by remember { mutableStateOf("") }
+    var phoneList by remember { mutableStateOf(listOf<String>()) }
 
     Column(modifier = Modifier
         .padding(16.dp)
@@ -55,20 +59,38 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
         TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
         TextField(value = program, onValueChange = { program = it }, label = { Text("Program") })
 
-        Button(
-            onClick = {
-                if (editingStudent == null) {
-                    viewModel.addStudent(Student(studentId, name, program))
-                } else {
-                    viewModel.updateStudent(Student(studentId, name, program, editingStudent!!.docId))
-                    editingStudent = null
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextField(
+                value = currentPhone,
+                onValueChange = { currentPhone = it },
+                label = { Text("Phone Number") },
+                modifier = Modifier.weight(1f)
+            )
+            Button(onClick = {
+                if (currentPhone.isNotBlank()) {
+                    phoneList = phoneList + currentPhone
+                    currentPhone = ""
                 }
-                studentId = ""
-                name = ""
-                program = ""
+            }, modifier = Modifier.padding(start = 8.dp)) {
+                Text("Add")
             }
-        ) {
-            Text(if (editingStudent == null) "Submit" else "Update")
+        }
+
+        if (phoneList.isNotEmpty()) {
+            Text("Phone Numbers:", style = MaterialTheme.typography.labelLarge)
+            phoneList.forEach {
+                Text("- $it")
+            }
+        }
+
+        Button(onClick = {
+            viewModel.addStudent(Student(studentId, name, program, phoneList))
+            studentId = ""
+            name = ""
+            program = ""
+            phoneList = listOf()
+        }, modifier = Modifier.padding(top = 8.dp)) {
+            Text("Submit")
         }
 
         Divider(modifier = Modifier.padding(vertical = 16.dp))
@@ -77,21 +99,17 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
 
         LazyColumn {
             items(viewModel.students) { student ->
-                Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                    Text("${student.id} - ${student.name} - ${student.program}")
-                    Button(onClick = {
-                        studentId = student.id
-                        name = student.name
-                        program = student.program
-                        editingStudent = student
-                    }) {
-                        Text("Edit")
-                    }
-                        Button(onClick = {
-                            viewModel.deleteStudent(student)
-                        }) {
-                            Text("Delete")
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Text("ID: ${student.id}")
+                    Text("Name: ${student.name}")
+                    Text("Program: ${student.program}")
+                    if (student.phones.isNotEmpty()) {
+                        Text("Phones:")
+                        student.phones.forEach {
+                            Text("- $it", style = MaterialTheme.typography.bodySmall)
                         }
+                    }
+                    Divider()
                 }
             }
         }
