@@ -51,6 +51,8 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
     var currentPhone by remember { mutableStateOf("") }
     var phoneList by remember { mutableStateOf(listOf<String>()) }
 
+    var selectedStudentDocId by remember { mutableStateOf<String?>(null) }
+
     Column(modifier = Modifier
         .padding(16.dp)
         .fillMaxSize()) {
@@ -59,27 +61,26 @@ fun StudentRegistrationScreen(viewModel: StudentViewModel = viewModel()) {
         TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
         TextField(value = program, onValueChange = { program = it }, label = { Text("Program") })
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextField(
-                value = currentPhone,
-                onValueChange = { currentPhone = it },
-                label = { Text("Phone Number") },
-                modifier = Modifier.weight(1f)
-            )
-            Button(onClick = {
-                if (currentPhone.isNotBlank()) {
-                    phoneList = phoneList + currentPhone
-                    currentPhone = ""
-                }
-            }, modifier = Modifier.padding(start = 8.dp)) {
-                Text("Add")
-            }
-        }
-
         if (phoneList.isNotEmpty()) {
             Text("Phone Numbers:", style = MaterialTheme.typography.labelLarge)
-            phoneList.forEach {
-                Text("- $it")
+            phoneList.forEachIndexed { index, phone ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextField(
+                        value = currentPhone,
+                        onValueChange = { currentPhone = it },
+                        label = { Text("Phone Number") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text("- $phone",)
+                    Button(onClick = {
+                        if (currentPhone.isNotBlank()) {
+                            phoneList = phoneList + currentPhone
+                            currentPhone = ""
+                        }
+                    }, modifier = Modifier.padding(start = 8.dp)) {
+                        Text("Add")
+                    }
+                }
             }
         }
 
